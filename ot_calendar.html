@@ -1,32 +1,33 @@
+
 <html>
 
 <head>
 	<script type="text/javascript">
-		totalDays = 0;
-		totalWeeks = 0;
-		weeklyHoursDec = 0;
-		monthlyHoursDec = 0;
-		monthStartDay = 0;
-		daysThisMonth = 0;
-   firstPP = false;
-		allDays = true;
-		
+		"use strict";
+		var totalDays = 0;
+		var totalWeeks = 0;
+		var weeklyHoursDec = 0;
+		var monthlyHoursDec = 0;
+		var monthStartDay = 0;
+		var daysThisMonth = 0;
+		var firstPP = false;
+		var allDays = true;
+
 		function printHoursMinutes(hoursDec, shortForm) {
 
-			hours = Math.floor(hoursDec);
-		
-			
-			minutes = Math.ceil((hoursDec - hours) * 60);
-			if (minutes > 60) {
+			var hours = Math.floor(hoursDec);
+
+			var minutes = Math.floor((hoursDec - hours) * 60);
+			if (minutes >= 60) {
 				hours++;
 				minutes -= 60;
 			}
-			
-			minutesStr = minutes.toString();
+
+			var minutesStr = minutes.toString();
 			if (minutes < 10) {
 				minutesStr = '0' + minutesStr;
-			}	
-			
+			}
+
 			if (shortForm) {
 				return hours + ':' + minutesStr;
 			} else {
@@ -34,40 +35,48 @@
 				return hours + ' hours ' + minutes + ' minutes ';
 			}
 		}
-		
+
 		function checkIfAllDays() {
-			allDays = true;				
-			for (k = 0; k < 7; k++) {
+			allDays = true;
+			var daysChecked = 0;
+			for (var k = 0; k < 7; k++) {
 				if (document.getElementById('day' + k).checked) {
 					allDays = false;
-					break;
+					daysChecked++;
 				}
 			}
-		}
-				
-		function choosePayPeriod() {
-			date = new Date();
 
-			html = '<p>Choose a month, year and pay period: ';
+			if (daysChecked >= 7) {
+				allDays = true;
+			}
+
+		}
+
+		function choosePayPeriod() {
+			var date = new Date();
+
+			var html = '<p>Choose a month, year and pay period: ';
 
 			html += '<select id="selPP" onchange="makeCalendar(false)"> ';
+
+			html += '<option value="fullMonth">Full Month</option> ';
 			html += '<option value="first">First Half of Month (1 - 15)</option> ';
-			html += '<option value="second">Second Half of Month (16 - end)</option> ';
-			html += '<option value="fullMonth">Full Month</option></select> ';
+			html += '<option value="second">Second Half of Month (16 - end)</option></select> ';
+
 
 			html += '<select id="selMonth" onchange="makeCalendar(false)">';
 
-			months = new Array('January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December');
+			var months = new Array('January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December');
 
-			for (i = 0; i < months.length; i++) {
+			for (var i = 0; i < months.length; i++) {
 				html += '<option value="' + months[i] + '">' + months[i] + '</option>\n';
 			}
 
 			html += '</select> <select id="selYear" onchange="makeCalendar(false)">';
 
-			thisYear = date.getFullYear();
+			var thisYear = date.getFullYear();
 
-			for (i = thisYear - 5; i < thisYear + 5; i++) {
+			for (var i = thisYear - 5; i < thisYear + 5; i++) {
 				html += '<option value="' + i + '">' + i + '</option>\n';
 			}
 			html += '</p>'
@@ -75,40 +84,40 @@
 		}
 
 		function chooseDays() {
-			html = '<p>Which days of the week do you work?  Leave everything unchecked if you want to put hours for every day.<br><table border="1"><tr>';
+			var html = '<p>Which days of the week do you work?  Leave everything unchecked if you want to put hours for every day.<br><table border="1"><tr>';
 
-			days = new Array('Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday');
+			var days = new Array('Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday');
 
-			for (i = 0; i < days.length; i++) {
+			for (var i = 0; i < days.length; i++) {
 				html += '<td>' + days[i] + '</td>';
 			}
 
 			html += '</tr><tr>';
-			for (i = 0; i < days.length; i++) {
+			for (var i = 0; i < days.length; i++) {
 				html += '<td><input type = "checkBox" id = "day' + i + '" onchange="checkIfAllDays()" /></td>';
 			}
 
 			return html;
 		}
-		
+
 		function toUTCDateString(d) {
-			months = new Array('January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December');
-			days = new Array('Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat');
+			var months = new Array('January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December');
+			var days = new Array('Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat');
 			return days[d.getUTCDay()] + ' ' + months[d.getUTCMonth()] + ' ' + d.getUTCDate() + ', ' + d.getUTCFullYear();
 		}
 
 		function getWeekHours() {
-			
-			date = new Date(document.getElementById("selYear").value, document.getElementById("selMonth").selectedIndex, 1);
 
-			day = date.getDate();
-			month = date.getMonth();
-			year = date.getFullYear();
+			var date = new Date(document.getElementById("selYear").value, document.getElementById("selMonth").selectedIndex, 1);
 
-			html = '';
+			var day = date.getDate();
+			var month = date.getMonth();
+			var year = date.getFullYear();
 
-			start = 0;
-			end = 0;
+			var html = '';
+
+			var start = 0;
+			var end = 0;
 
 			if (document.getElementById("selPP").value == "first") {
 				start = 1;
@@ -120,15 +129,15 @@
 				start = 1;
 				end = daysInMonth(month, year);
 			}
-			
-			sDate = new Date(Date.UTC(year, month, start));
-			eDate = new Date(Date.UTC(year, month, end));
-			sDate.setTime(sDate.getTime() + sDate.getTimezoneOffset()*60*1000);
-			eDate.setTime(eDate.getTime() + eDate.getTimezoneOffset()*60*1000);
-			
+
+			var sDate = new Date(Date.UTC(year, month, start));
+			var eDate = new Date(Date.UTC(year, month, end));
+			sDate.setTime(sDate.getTime() + sDate.getTimezoneOffset() * 60 * 1000);
+			eDate.setTime(eDate.getTime() + eDate.getTimezoneOffset() * 60 * 1000);
+
 			if (sDate.getDay() > 0) {
 				html += 'Please enter the number of hours you reported on the following days.<br /><table>';
-				lastPPDays = new Date(sDate.getTime() - (sDate.getDay()) * 86400000);
+				var lastPPDays = new Date(sDate.getTime() - (sDate.getDay()) * 86400000);
 
 				while (lastPPDays.getTime() < sDate.getTime()) {
 					html += '<tr><th>' + toUTCDateString(lastPPDays) + '</th><td><input type="text" class="lastMonthHours" size = "5" maxLength="2"> hours <input type="text" class="lastMonthMinutes" size = "5" maxLength="2"> minutes</td><td><b><font color="#FF0000" class="lastMonthError" /></b> </td></tr>';
@@ -149,20 +158,21 @@
 			if (!justCal) {
 				document.getElementById("lastMonthWeeklyDiv").innerHTML = getWeekHours();
 			}
-			
-			document.getElementById('monthlyTotalDiv').innerHTML = '';
-			calendar_html = '';
-			
-			date = new Date(document.getElementById("selYear").value, document.getElementById("selMonth").selectedIndex, 1);
 
-			day = date.getDate();
-			month = date.getMonth();
-			year = date.getFullYear();
+			document.getElementById('monthlyTotalDiv').innerHTML = '';
+			var calendar_html = '';
+
+
+			var date = new Date(document.getElementById("selYear").value, document.getElementById("selMonth").selectedIndex, 1);
+
+			var day = date.getDate();
+			var month = date.getMonth();
+			var year = date.getFullYear();
 
 			daysThisMonth = daysInMonth(month, year);
-			start = 0;
-			end = 0;
-     firstPP = false;
+			var start = 0;
+			var end = 0;
+			firstPP = false;
 
 			if (!justCal) {
 				document.getElementById("alreadyWorkedDiv").innerHTML = '';
@@ -171,7 +181,7 @@
 			if (document.getElementById("selPP").value == "first") {
 				start = 1;
 				end = 15;
-     firstPP = true;
+				firstPP = true;
 			} else if (document.getElementById("selPP").value == "second") {
 				start = 16;
 				end = daysThisMonth;
@@ -183,21 +193,21 @@
 				end = daysThisMonth;
 			}
 
-			sDate = new Date(year, month, start);
-			eDate = new Date(year, month, end);
+			var sDate = new Date(year, month, start);
+			var eDate = new Date(year, month, end);
 
-			week = 0;
+			var week = 0;
 
-			months = new Array('January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December');
-			days = new Array('Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday');
+			var months = new Array('January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December');
+			var days = new Array('Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday');
 
 			//get day of week of first day of pay period
-			currentDay = new Date(+sDate);
+			var currentDay = new Date(+sDate);
 
 			calendar_html += '<table border = "1">';
 			calendar_html += '<tr height="75px"><td colspan="8" style="text-align: center;"><h3>' + months[month] + ' ' + year + '</h3></td></tr><tr>';
 
-			for (week_day = 0; week_day < days.length; week_day++) {
+			for (var week_day = 0; week_day < days.length; week_day++) {
 				calendar_html += '<th>' + days[week_day] + '</th>';
 			}
 
@@ -205,47 +215,47 @@
 
 			calendar_html += '<tr>';
 
-			dateRow = true
+			var dateRow = true
 				// Fill the first week of the pay period with the appropriate number of blanks.
-			for (week_day = 0; week_day < sDate.getDay(); week_day++) {
+			for (var week_day = 0; week_day < sDate.getDay(); week_day++) {
 				calendar_html += '<td></td>';
 			}
-			
+
 			totalDays = 0;
-			currentDay2 = new Date(currentDay.getTime());
+			var currentDay2 = new Date(currentDay.getTime());
 			while (currentDay <= eDate || currentDay2 <= eDate) {
 
 				if (dateRow && currentDay <= eDate) {
 					calendar_html += '<th>' + currentDay.getDate() + '</th>';
 					currentDay.setDate(currentDay.getDate() + 1);
-					
+
 					if (document.getElementById('day' + currentDay.getUTCDay()).checked || allDays) {
 						totalDays++;
 					}
-					
+
 				} else {
-					
+
 					if (week == 0 && currentDay2.getDay() == sDate.getDay()) {
-						for (week_day = 0; week_day < sDate.getDay(); week_day++) {
+						for (var week_day = 0; week_day < sDate.getDay(); week_day++) {
 							calendar_html += '<td></td>';
 						}
 					}
 					calendar_html += '<td class="week' + week + '" height = "50px"></td>';
 					currentDay2.setDate(currentDay2.getDate() + 1);
-					
+
 				}
-				
+
 				if (currentDay > eDate && dateRow) {
-							
+
 					// Fill the last week of the pay period with the appropriate number of blanks.
-					for (i = eDate.getDay(); i < 6; i++) {
+					for (var i = eDate.getDay(); i < 6; i++) {
 						calendar_html += '<td ></td>';
 					}
-					calendar_html += '</tr><tr>';	
-					
-					dateRow = !dateRow;				
+					calendar_html += '</tr><tr>';
+
+					dateRow = !dateRow;
 				} else if (currentDay.getDay() == 0 && dateRow && currentDay <= eDate) {
-					
+
 					calendar_html += '</tr><tr>';
 					dateRow = !dateRow;
 				} else if (currentDay2.getDay() == 0 && !dateRow && currentDay2 <= eDate) {
@@ -253,12 +263,12 @@
 					dateRow = !dateRow;
 					week++;
 				}
-			
+
 			}
 
 			// Fill the last week of the month with the appropriate number of result boxes.
-			for (i = eDate.getDay(); i < 6; i++) {
-	
+			for (var i = eDate.getDay(); i < 6; i++) {
+
 				calendar_html += '<td ></td>';
 			}
 
@@ -267,16 +277,9 @@
 			calendar_html += '</tr>';
 			calendar_html += '</table>';
 
-			if (document.getElementById("selPP").value == "first") {
-				while (currentDay.getDate() <= daysThisMonth && currentDay.getUTCMonth() == month) {
-					if (document.getElementById('day' + currentDay.getUTCDay()).checked || allDays) {
-						totalDays++;
-					}
-					currentDay.setDate(currentDay.getDate() + 1);
-				}
-			}
 
 			totalWeeks = week;
+
 			monthStartDay = sDate.getUTCDay();
 
 			// Display the calendar.
@@ -305,13 +308,13 @@
 				return false;
 			}
 
-			if (isNaN(document.getElementById('weeklyHours').innerHTML[0]) || (document.getElementById("monthlyHours").value.trim() == '' && document.getElementById("monthlyMinutes").value.trim() == '' )) {
+			if (isNaN(document.getElementById('weeklyHours').innerHTML[0]) || (document.getElementById("monthlyHours").value.trim() == '' && document.getElementById("monthlyMinutes").value.trim() == '')) {
 				document.getElementById('weeklyHours').innerHTML = '<font color="#ff0000"><b>Not enough information entered above.  Please check that you <br>have entered a number of hours and/or chosen an exemption.</b></font>';
 				return false;
 			}
-			lastMonthHours = document.getElementsByClassName("lastMonthHours");
-			lastMonthMinutes = document.getElementsByClassName("lastMonthMinutes");
-			for (i = 0; i < lastMonthHours.length; i++) {
+			var lastMonthHours = document.getElementsByClassName("lastMonthHours");
+			var lastMonthMinutes = document.getElementsByClassName("lastMonthMinutes");
+			for (var i = 0; i < lastMonthHours.length; i++) {
 				if (isNaN(lastMonthHours[i].value.trim()) || isNaN(lastMonthMinutes[i].value.trim())) {
 					document.getElementsByClassName("lastMonthError")[i].innerHTML = "You have entered something that isn't a number.<br>Please check what you've entered.";
 					return false;
@@ -320,13 +323,13 @@
 				}
 
 			}
-			
+
 			if (document.getElementById('alreadyWorkedDiv').innerHTML != '') {
 				document.getElementById("alreadyWorkedError").innerHTML = ''
 
 				if (isNaN(document.getElementById("alreadyWorkedHours").value.trim()) || isNaN(document.getElementById("alreadyWorkedMinutes").value.trim())) {
-						document.getElementById("alreadyWorkedError").innerHTML = "You have entered something that isn't a number.<br>Please check what you've entered.";
-						return false;
+					document.getElementById("alreadyWorkedError").innerHTML = "You have entered something that isn't a number.<br>Please check what you've entered.";
+					return false;
 				}
 			}
 
@@ -335,16 +338,16 @@
 
 		function calcWeekly() {
 
-			html = 'Invalid Input';
+			var html = 'Invalid Input';
 
 			if (validateTopInput()) {
 
-				monthlyHoursBox = 0;
+				var monthlyHoursBox = 0;
 				if (document.getElementById('monthlyHours').value.trim() != '') {
 					monthlyHoursBox = parseFloat(document.getElementById('monthlyHours').value.trim());
 				}
 
-				monthlyMinutesBox = 0;
+				var monthlyMinutesBox = 0;
 				if (document.getElementById('monthlyMinutes').value.trim() != '') {
 					monthlyMinutesBox = parseFloat(document.getElementById('monthlyMinutes').value.trim());
 				}
@@ -363,7 +366,7 @@
 
 
 				if (document.getElementById('exemptionOther').checked) {
-					otherHoursBox = 0;
+					var otherHoursBox = 0;
 					if (document.getElementById('otherHours').value.trim() != '') {
 						otherHoursBox = parseFloat(document.getElementById('otherHours').value.trim());
 					}
@@ -388,144 +391,222 @@
 		function doGenerate() {
 
 			document.getElementById("monthlyTotalDiv").innerHTML = '';
-			roundDown = false;
-
+			
 			if (validateInput()) {
-				
-				makeCalendar(true);
-				
-				monthlyHoursLeft = monthlyHoursDec;
-				monthlyTotal = 0;
-				monthAvg = 0;
-				totalDaysLeft = totalDays;
 
-				weekTotals = document.getElementsByClassName("total");
-				OTHours = 0;
-				
-				awH = 0;
-				awM = 0;
+				makeCalendar(true);
+
+				var monthlyHoursLeft = monthlyHoursDec;
+				var monthlyTotal = 0;
+				var monthAvg = 0;
+				var totalDaysLeft = totalDays;
+
+				var weekTotals = document.getElementsByClassName("total");
+				var OTHours = 0;
+
+				var timesheet = new Array();
+				for (var i = 0; i < weekTotals.length; i++) {
+					timesheet.push(new Array());
+				}
+				var weeklyTotals = new Array()
+
+				var awH = 0;
+				var awM = 0;
 				if (document.getElementById('alreadyWorkedDiv').innerHTML != '') {
 					if (document.getElementById("alreadyWorkedHours").value.trim() != '') {
 						awH = parseFloat(document.getElementById("alreadyWorkedHours").value.trim())
 					}
-					
+
 					if (document.getElementById("alreadyWorkedMinutes").value.trim() != '') {
 						awM = parseFloat(document.getElementById("alreadyWorkedMinutes").value.trim())
 					}
 					monthlyHoursLeft -= awH + awM / 60;
 				}
 
-				spaceLeft = weeklyHoursDec * (weekTotals.length - 2) + Math.min(document.getElementsByClassName("week" + totalWeeks).length * 12, weeklyHoursDec) + Math.min(document.getElementsByClassName("week" + 0).length * 12, weeklyHoursDec);
-				
-				for (week = 0; week <= totalWeeks; week++) {
+				for (var week = 0; week <= totalWeeks; week++) {
 					//reset weekly hour
-					weeklyHoursLeft = weeklyHoursDec;
-					weekHours = 0;
-					
-					
+					var weeklyHoursLeft = weeklyHoursDec;
+					var weekHours = 0;
+
+
 					if (week == 0) {
-						lastMonthHours = document.getElementsByClassName("lastMonthHours");
-						lastMonthMinutes = document.getElementsByClassName("lastMonthMinutes");
-						for (m = 0; m < lastMonthHours.length; m++) {
-							weekMins = 0;
+						var lastMonthHours = document.getElementsByClassName("lastMonthHours");
+						var lastMonthMinutes = document.getElementsByClassName("lastMonthMinutes");
+						for (var m = 0; m < lastMonthHours.length; m++) {
+							var weekMins = 0;
 							if (lastMonthMinutes[m].value.trim() != '') {
 								weekMins = parseFloat(lastMonthMinutes[m].value.trim());
 							}
-							
-							weekHrs = 0;
+
+							var weekHrs = 0;
 							if (lastMonthHours[m].value.trim() != '') {
 								weekHrs = parseFloat(lastMonthHours[m].value.trim());
 							}
 							weekHours += weekHrs + weekMins / 60;
 
 						}
-						weeklyHoursLeft -= weekHours;				
-//						monthlyHoursLeft -= weekHours;	
-						
-						monthAvg = monthlyHoursLeft / totalDays;						
-						
+
+						if (firstPP) {
+							monthlyHoursLeft = Math.ceil(monthlyHoursLeft * 0.6);
+
+						}
+						weeklyHoursLeft -= weekHours;
+						timesheet[week].push(weekHours);
+						//						monthlyHoursLeft -= weekHours;	
+
+						monthAvg = monthlyHoursLeft / totalDays;
+
 					}
 
-					
-					thisWeekDays = document.getElementsByClassName("week" + week);
-					
-					dayIndex = 0;
-						
+
+					var thisWeekDays = document.getElementsByClassName("week" + week);
+
+					var dayIndex = 0;
+
 					if (week == 0) {
 						dayIndex = monthStartDay;
 					}
-					
-					daysChecked = 0;
-					for (k = dayIndex; k < thisWeekDays.length + dayIndex; k++) {
+
+					var daysChecked = 0;
+					for (var k = dayIndex; k < thisWeekDays.length + dayIndex; k++) {
 						if (document.getElementById('day' + k).checked || allDays) {
 							daysChecked++;
 						}
 					}
-					
-					avgDailyHours = Math.min(12, weeklyHoursLeft / daysChecked, monthlyHoursLeft / daysChecked);
-					avgDailyHours = Math.max(avgDailyHours, monthAvg);
-					weekDaysLeft = thisWeekDays.length;
-						
-					for (j = dayIndex; j < thisWeekDays.length + dayIndex; j++) {
-						hoursBilledToday = 0;				
+
+					var weekDaysLeft = thisWeekDays.length;
+
+					for (var j = dayIndex; j < thisWeekDays.length + dayIndex; j++) {
+						var hoursBilledToday = 0;
 
 						if (document.getElementById('day' + j).checked || allDays) {
-							if (totalDays > totalDaysLeft && monthAvg < monthlyTotal / (totalDays - totalDaysLeft)) {
+							var hoursToday = monthAvg;
+
+							if (hoursToday > 1) {
 								hoursToday = Math.floor(monthAvg);
-							} else {
-								hoursToday = Math.ceil(monthAvg);
 							}
-							
-							if (week == 0) {
-								hoursToday += Math.floor((spaceLeft - monthlyHoursDec) / thisWeekDays.length) * 2;
-								if (j % 2) {
-									hoursToday++;
-								}
-							}
-							
-//							if (roundDown) {
-//								hoursToday = Math.floor(avgDailyHours);
-//							} else {
-//								hoursToday = Math.ceil(avgDailyHours);
-//							}
-							//if (avgDailyHours > monthlyHoursLeft / totalDaysLeft) {
-								//hoursToday = Math.floor(avgDailyHours);
-							//} else {
-								//hoursToday = Math.round(avgDailyHours);
-							//}
-							
-							if (j == thisWeekDays.length - 1 && week == totalWeeks && !firstPP) {
-								hoursToday = Math.min(weeklyHoursLeft, monthlyHoursLeft);
-							}
-							
+
 							hoursBilledToday = Math.min(hoursToday, weeklyHoursLeft, monthlyHoursLeft, 12);
 							
-							hoursBilledToday = Math.floor(hoursBilledToday * 1000) / 1000;
-							
+							if (j == thisWeekDays.length + dayIndex - 1) {
+								hoursBilledToday += 1/61;
+							}
+
+							//hoursBilledToday = Math.floor(hoursBilledToday * 10000) / 10000;
+
 							weeklyHoursLeft -= hoursBilledToday;
 							monthlyHoursLeft -= hoursBilledToday;
 							weekHours += hoursBilledToday;
 							monthlyTotal += hoursBilledToday;
-
+							
+							//weeklyHoursLeft = Math.floor(weeklyHoursLeft * 10000) / 10000;
+							//monthlyHoursLeft = Math.floor(monthlyHoursLeft * 10000) / 10000;
+							//weekHours = Math.floor(weekHours * 10000) / 10000;
+							//monthlyTotal = Math.floor(monthlyTotal * 10000) / 10000;
+																																			
+							
 							weekDaysLeft--;
 							totalDaysLeft--;
-							roundDown = !roundDown;
 						}
-						
-						if (hoursBilledToday >= 1/60) {
-							thisWeekDays[j-dayIndex].innerHTML = printHoursMinutes(hoursBilledToday, true);
+
+						if (hoursBilledToday >= 1 / 60) {
+							//thisWeekDays[j-dayIndex].innerHTML = printHoursMinutes(hoursBilledToday, true);
+							timesheet[week].push(hoursBilledToday);
 						}
-						
-					
+
+
 					}
 					OTHours += Math.max(0, weekHours - 40);
-					weekTotals[week].innerHTML = printHoursMinutes(weekHours, true);
-					
+					weeklyTotals.push(weekHours);
+					//weekTotals[week].innerHTML = printHoursMinutes(weekHours, true);
+
 				}
+
+				var minHour = 1;
+				for (var n = 0; n < 84; n++) {
+					if (monthlyHoursLeft > 0) {
+						var counter = 0;			
+						var skip = Math.max(Math.floor(totalDays / monthlyHoursLeft) + 1 - n, 1);
+						if (skip > 10) {
+							skip = 1;
+						}
+
+						if (n > 70 && (n % 5 == 0)) {
+							minHour *= 0.5;
+						}	
+						
+						for (var i = 0; i < timesheet.length; i++) {
+
+							var kstart = 0;
+							if (i == 0) {
+								kstart = 1;
+							}
+								
+							for (var k = kstart; k < timesheet[i].length; k++) {
+								if (monthlyHoursLeft > 0 && counter > 0 && counter % skip == 0 &&
+									weeklyHoursDec - weeklyTotals[i] >= minHour) {
+
+									var hours = Math.min(1, monthlyHoursLeft, 12 - timesheet[i][k], weeklyHoursDec - weeklyTotals[i]);
+									
+									hours = Math.floor(hours * 10000) / 10000;
+									
+									timesheet[i][k] += hours;
+									weeklyTotals[i] += hours;
+									monthlyHoursLeft -= hours;
+									monthlyTotal += hours;
+									
+									timesheet[i][k] = Math.floor(timesheet[i][k] * 10000) / 10000;
+									weeklyTotals[i] = Math.floor(weeklyTotals[i] * 10000) / 10000;
+									monthlyHoursLeft = Math.floor(monthlyHoursLeft * 10000) / 10000;
+									monthlyTotal = Math.floor(monthlyTotal * 10000) / 10000;
+									
+									if (weeklyHours[i] > 40) {
+										OTHours += Math.min(hours, weeklyTotals[i] - 40);
+									}
+								}
+								counter++;
+							}
+
+						}
+					}
+				}
+
+
+				for (var i = 0; i < timesheet.length; i++) {
+					var weekDay = 0;
+					var kstart = 0;
+					if (i == 0) {
+						weekDay = monthStartDay;
+						kstart = 1;
+					}
+					var thisWeekDays = document.getElementsByClassName("week" + i);
+					var index = kstart;					
+					for (var k = 0; k < thisWeekDays.length; k++) {
+
+						if (index >= timesheet[i].length) {
+							break;
+						}
+
+						if (document.getElementById('day' + weekDay).checked || allDays && 
+						timesheet[i][index] > 0) {
+							thisWeekDays[k].innerHTML = printHoursMinutes(timesheet[i][index], true);
+
+							index++;					
+							
+						}
+						weekDay++;
+
+					}
+					weekTotals[i].innerHTML = printHoursMinutes(weeklyTotals[i], true);
+				}
+
 				document.getElementById("monthlyTotalDiv").innerHTML = "Total Hours This Pay Period: " + printHoursMinutes(monthlyTotal, true) + "<br>Overtime Hours: " + printHoursMinutes(OTHours, true);
+				if (!firstPP && !allDays && monthlyHoursLeft > 0) {
+					document.getElementById("monthlyTotalDiv").innerHTML += "<br /><font color = \"red\"><b>Couldn't bill all your hours.  You might have not selected enough days.</b></font>";
+				}
+
 			}
 		}
-
 
 	</script>
 </head>
@@ -535,21 +616,22 @@
 
 	<h3>Overtime Hours Calendar Generator</h3>
 
-	<p>I made this to help people with their IHSS timesheets given all the confusion with the new overtime rules.  This is not official and I can't take responsibility for any problems you have from relying on this - it's just a tool to help.  I tested it and it works fine as far as I can tell.  Please let me know if you have any problems or see any mistakes using it and I'll fix them.</p>
+	<p>I made this to help people with their IHSS timesheets given all the confusion with the new overtime rules. This is not official and I can't take responsibility for any problems you have from relying on this - it's just a tool to help. I tested it and it works fine as far as I can tell. Please let me know if you have any problems or see any mistakes using it and I'll fix them.</p>
 	<p><b>Disclaimer: You are only allowed to bill the actual hours you've worked on each day.  This tool should only be used if you work more hours than IHSS gives you, or as a scheduling tool.  I don't take responsibility for any use of this that would violate IHSS rules or any laws.</b></p>
 	<p>With that out of the way, here's who should use this.:
-	<li>0. Calculating weekly maximum hours should be correct for every case.</li>
-	<li>1. First, right now <b>creating timesheets only works correctly for one provider working for one recipient</b>.</li>
-	<li>2. For one provider with multiple recipients it will get you close, if you enter the monthly hours your recipient has assigned you and the weekly hours as an "Other Exemption"" if the calculated maximum weekly hours are too low.  Do this for each recipient, but be sure you <b>never go over 12 hours a days total</b>.  But if you use it for this, please double check the results.</li>
-	<li>3. For a provider who works for a recipient with multiple providers, read #2.</li>
-	<li>4. If you work for multiple recipients and at least one of them has multiple providers, this tool won't work because it would have to coordinate too many people.  It's definitely something that someone could make, but I don't have time to take on a big project like that, and I'm not sure IHSS would be okay with that.</p>
+		<li>0. Calculating weekly maximum hours should be correct for every case.</li>
+		<li>1. First, right now <b>creating timesheets only works correctly for one provider working for one recipient</b>.</li>
+		<li>2. For one provider with multiple recipients it will get you close, if you enter the monthly hours your recipient has assigned you and the weekly hours as an "Other Exemption"" if the calculated maximum weekly hours are too low. Do this for each recipient, but be sure you <b>never go over 12 hours a days total</b>. But if you use it for this, please double check the results.</li>
+		<li>3. For a provider who works for a recipient with multiple providers, read #2.</li>
+		<li>4. If you work for multiple recipients and at least one of them has multiple providers, this tool won't work because it would have to coordinate too many people. It's definitely something that someone could make, but I don't have time to take on a big project like that, and I'm not sure IHSS would be okay with that.</p>
 	<p><b>Instructions:</b>
-	<li>1. Read everything above.</li>
-	<li>2. Enter your (or your recipient's) monthly authorized hours and check any exemptions you have been approved for.</li>
-	<li>3. Choose a month and year and the pay period you are on (or the full month).</li>
-	<li>4. Enter any information it asks for about the previous pay period.  <b>Make sure what you enter is complete and accurate.</b></li>
-	<li>5. Click "Create My Timesheet" at the bottom.  If you want to do more than one month or pay period, make sure you write down or print the hours and total for the last week.</li>
-	<li>6. <a href = "mailto:dude8604+ihsstimesheet@gmail.com">Email me</a> or contact me through the Facebook group if you have problems, questions, comments about this, or if you get a violation from using the results of this.</li></p>
+		<li>1. Read everything above.</li>
+		<li>2. Enter your (or your recipient's) monthly authorized hours and check any exemptions you have been approved for.</li>
+		<li>3. Choose a month and year and the pay period you are on (or the full month). <b>Choosing "full month" splits the hours more evenly</b>, with the first pay period it targets 60% of your monthly hours because it can't anticipate the second half of the month.</li>
+		<li>4. Enter any information it asks for about the previous pay period. <b>Make sure what you enter is complete and accurate.</b></li>
+		<li>5. Click "Create My Timesheet" at the bottom. If you want to do more than one month or pay period, make sure you write down or print the hours and total for the last week.</li>
+		<li>6. <a href="mailto:dude8604+ihsstimesheet@gmail.com">Email me</a> or contact me through the Facebook group if you have problems, questions, comments about this, or if you get a violation from using the results of this.</li>
+	</p>
 	<p>If there's anything I should add to this, please let me know.</p>
 
 
@@ -578,14 +660,15 @@
 
 	<div id="lastMonthWeeklyDiv"></div>
 	<div id="alreadyWorkedDiv"></div>
-<br />
+	<br />
 	<p id="resultCalendar"></p>
-	
-<br />
-	<div><h3 id = "monthlyTotalDiv"/></div>
+
+	<br />
+	<div>
+		<h3 id="monthlyTotalDiv" /></div>
 	<button type="button" onClick="doGenerate()">Create My Timesheet</button>
 
-	
+
 	<script>
 		document.getElementById("selDaysDiv").innerHTML = chooseDays();
 		document.getElementById("selMonthDiv").innerHTML = choosePayPeriod();
@@ -594,9 +677,10 @@
 		document.getElementById("selMonth").selectedIndex = new Date().getMonth();
 		document.getElementById("lastMonthWeeklyDiv").innerHTML = getWeekHours();
 		makeCalendar();
+
 	</script>
 
-	
+
 </body>
 
 </html>
