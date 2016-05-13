@@ -490,9 +490,14 @@
 						if (document.getElementById('day' + j).checked || allDays) {
 							var minutesToday = monthAvg;
 							var wholeNums = document.getElementById('wholeNums');
+							
 							if (minutesToday > 60 && wholeNums.checked) {
+								if (minutesToday > monthlyMinutesLeft / totalDaysLeft) {
 								minutesToday = Math.floor(monthAvg/60)*60;
+							} else {
+								minutesToday = Math.ceil(monthAvg/60)*60;
 							}
+						}
 							
 
 							minutesBilledToday = Math.min(minutesToday, weeklyMinutesLeft, monthlyMinutesLeft, 12*60);
