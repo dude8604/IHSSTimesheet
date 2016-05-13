@@ -1,295 +1,542 @@
 <html>
+
 <head>
-<script type="text/javascript">
-
-function chooseMonth() {
-	date = new Date();
-	
-	html='<p>Choose a month and year: <select id="selMonth" onchange="makeCalendar()">';
-	
-	months = new Array('January','February','March','April','May','June','July','August','September','October','November','December');
-	
-	for (i=0; i<months.length; i++) {
-		html+='<option value="' + months[i] + '">'+months[i]+'</option>\n';
-	}
-	
-	html+= '</select> <select id="selYear" onchange="makeCalendar()">';
-	
-	thisYear=date.getFullYear();
-	
-	for(i=thisYear-5;i<thisYear+5;i++) {
-		html+='<option value="' + i + '">'+i+'</option>\n';
-	}
-	html+='</p>'
-	return html;
-}
-
-function chooseDays() {
-	html = '<p>Which days of the week do you work?  Leave everything unchecked if you want to put hours for every day.<br><table border="1"><tr>';
-	
-	days = new Array('Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday');
-	
-	for (i = 0; i < days.length; i++) {
-		html += '<td>' + days[i] + '</td>';
-	}
-	
-	html += '</tr><tr>';
-	for (i = 0; i < days.length; i++) {
-		html += '<td><input type = "checkBox" id = "day' + i + '" /></td>';
-	}
-	
-	return html;
-}
-
-function getWeekHours() {
-  date = new Date(document.getElementById("selYear").value, document.getElementById("selMonth").selectedIndex, 1);
-  
-  html = '';
-  
-  dayOfWeek = date.getDay();
-  
-  if (dayOfWeek > 0) {
-	  html += 'Please enter the number of hours you reported on the following days.<br /><table>';
-	lastMonthDays = new Date(+date); 
-	
-	lastMonthDays.setDate(-1);
-	lastMonthDays.setDate(lastMonthDays.getDate()-dayOfWeek+2);
-	  while (lastMonthDays.getMonth() != date.getMonth()) {
-		html += '<tr><th>' + lastMonthDays.toDateString() + '</th><td><input type="text" class="lastMonthHours" size = "5" maxLength="2"> hours <input type="text" class="lastMonthMinutes" size = "5" maxLength="2"> minutes</td><td><b><font color="#FF0000" class="lastMonthError" /></b> </td></tr>';
+	<script type="text/javascript">
+		totalDays = 0;
+		totalWeeks = 0;
+		weeklyHoursDec = 0;
+		monthlyHoursDec = 0;
+		monthStartDay = 0;
+		daysThisMonth = 0;
+		allDays = true;
 		
-		lastMonthDays.setDate(lastMonthDays.getDate()+1);
-	  }
-  }
-  
-  return html;
-}
+		function printHoursMinutes(hoursDec, shortForm) {
 
-function makeCalendar() {
-	
-	document.getElementById("lastMonthWeeklyDiv").innerHTML = getWeekHours();
-	
-  date = new Date(document.getElementById("selYear").value, document.getElementById("selMonth").selectedIndex, 1);
-
-  day = date.getDate();
-  month = date.getMonth();
-  year = date.getFullYear();
-  
-  week=0
-
-  months = new Array('January','February','March','April','May','June','July','August','September','October','November','December');
-  days = new Array('Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday');
-
-  this_month = new Date(year, month, 1);
-  next_month = new Date(year, month + 1, 1);
-
-  // Find out when this month starts and ends.
-  first_week_day = this_month.getDay();
-  days_in_this_month = Math.round((next_month.getTime() - this_month.getTime()) / (1000 * 60 * 60 * 24));
-
-  calendar_html = '<table border = "1">';
-  calendar_html += '<tr height="75px"><td colspan="8" style="text-align: center;"><h3>' + months[month] + ' ' + year + '</h3></td></tr><tr></tr>';
-  
-  for(week_day = 0; week_day < days.length; week_day++) {
-    calendar_html += '<th>' + days[week_day] + '</th>';
-  }
-  
-  calendar_html += '<th>Weekly Total</th>';
-  
-  calendar_html += '<tr>';
-  
-	dateRow=true
-  // Fill the first week of the month with the appropriate number of blanks.
-  for(week_day = 0; week_day < first_week_day; week_day++) {
-    calendar_html += '<td></td>';
-  }
-
-  week_day = first_week_day;
-  var day_counter;
-  for(day_counter = 1; day_counter <= days_in_this_month; day_counter++) {
-    week_day %= 7;
-    if(week_day == 0) {
-		if (!dateRow) {
-      calendar_html += '<th class="week">0</th></tr><tr>';
-  } else {
-	  calendar_html += '</tr><tr>';
-	  day_counter-=7;
-      week++;	  
-  }
- 		dateRow=!dateRow     
-
-  }
-	if (dateRow) {
-  calendar_html += '<th style="text-align: center;" height="25px">' + day_counter + ' </th>';
-  } else {
-	calendar_html += '<th class = "week' + week + '" style="text-align: center;" height="50px"> </th>';
-  }
-    week_day++;
-  }
-  
-  // Fill the last week of the month with the appropriate number of blanks.
-  for(i=week_day; i < 7; i++) {
-    calendar_html += '<td > </td>';
-  }
-  calendar_html += '</tr><tr>';
-  // Fill the last week of the month with the appropriate number of result boxes.
-  day_counter -= week_day;
-  for(i=1; i < 8; i++) {
-	  if (i<=week_day && day_counter <= days_in_this_month) {
-		  calendar_html += '<td class="week' + week + '" style="text-align: center;" height="50px"></td>';
-	  } else {
-    calendar_html += '<td > </td>';
-  }
-}
-
-      calendar_html += '<th class="week">0</th></tr><tr>';
-
-  calendar_html += '</tr>';
-  calendar_html += '</table>';
-
-  // Display the calendar.
-  document.getElementById("resultCalendar").innerHTML = calendar_html;
-}
-
-function validateTopInput() {
-	document.getElementById("monthlyHoursError").innerHTML = ''
-	document.getElementById("exemptionError").innerHTML = ''
-	
-	if (isNaN(document.getElementById("monthlyHours").value.trim()) || isNaN(document.getElementById("monthlyMinutes").value.trim())) {
-		document.getElementById("monthlyHoursError").innerHTML = "You have entered something that isn't a number.<br>Please check what you've entered.";
-		return false;
-	}
-	
-	if (document.getElementById("exemptionOther").checked && (isNaN(document.getElementById("otherHours").value.trim()) || isNaN(document.getElementById("otherMinutes").value.trim()))) {
-		document.getElementById("exemptionError").innerHTML = "You have entered something that isn't a number.<br>Please check what you've entered.";
-		return false;
-	}
-	
-	return true;
-}
-
-function validateInput() {
-	if (!validateTopInput()) {
-		return false;
-	}
-	
-	lastMonthHours=document.getElementsByClassName("lastMonthHours");
-	lastMonthMinutes=document.getElementsByClassName("lastMonthMinutes");
-	for (i=0;i<lastMonthHours.length;i++) {
-		if (isNaN(lastMonthHours[i].value.trim()) || isNaN(lastMonthMinutes[i].value.trim())) {
-			document.getElementsByClassName("lastMonthError")[i].innerHTML = "You have entered something that isn't a number.<br>Please check what you've entered.";
-				return false;			
-		} else {
-			document.getElementsByClassName("lastMonthError")[i].innerHTML = '';
-		}
-
-	}
-	
-	return true;
-}
-
-function calcWeekly() {
-	
-	html = 'Invalid Input';
-	
-	if (validateTopInput()) {
+			hours = Math.floor(hoursDec);
 		
-		weeklyHoursBox = 0;
-		if (document.getElementById('monthlyHours').value.trim() != '') {
-			weeklyHoursBox = parseFloat(document.getElementById('monthlyHours').value.trim());
+			
+			minutes = Math.ceil((hoursDec - hours) * 60);
+			minutesStr = minutes.toString();
+			if (minutes < 10) {
+				minutesStr = '0' + minutesStr;
+			}	
+			
+			if (shortForm) {
+				return hours + ':' + minutesStr;
+			} else {
+
+				return hours + ' hours ' + minutes + ' minutes ';
+			}
 		}
 		
-		weeklyMinutesBox = 0;
-		if (document.getElementById('monthlyMinutes').value.trim() != '') {
-			weeklyMinutesBox = parseFloat(document.getElementById('monthlyMinutes').value.trim());
+		function checkIfAllDays() {
+			allDays = true;				
+			for (k = 0; k < 7; k++) {
+				if (document.getElementById('day' + k).checked) {
+					allDays = false;
+					break;
+				}
+			}
+		}
+				
+		function choosePayPeriod() {
+			date = new Date();
+
+			html = '<p>Choose a month, year and pay period: ';
+
+			html += '<select id="selPP" onchange="makeCalendar(false)"> ';
+			html += '<option value="first">First Half of Month (1 - 15)</option> ';
+			html += '<option value="second">Second Half of Month (16 - end)</option> ';
+			html += '<option value="fullMonth">Full Month</option></select> ';
+
+			html += '<select id="selMonth" onchange="makeCalendar(false)">';
+
+			months = new Array('January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December');
+
+			for (i = 0; i < months.length; i++) {
+				html += '<option value="' + months[i] + '">' + months[i] + '</option>\n';
+			}
+
+			html += '</select> <select id="selYear" onchange="makeCalendar(false)">';
+
+			thisYear = date.getFullYear();
+
+			for (i = thisYear - 5; i < thisYear + 5; i++) {
+				html += '<option value="' + i + '">' + i + '</option>\n';
+			}
+			html += '</p>'
+			return html;
+		}
+
+		function chooseDays() {
+			html = '<p>Which days of the week do you work?  Leave everything unchecked if you want to put hours for every day.<br><table border="1"><tr>';
+
+			days = new Array('Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday');
+
+			for (i = 0; i < days.length; i++) {
+				html += '<td>' + days[i] + '</td>';
+			}
+
+			html += '</tr><tr>';
+			for (i = 0; i < days.length; i++) {
+				html += '<td><input type = "checkBox" id = "day' + i + '" onchange="checkIfAllDays()" /></td>';
+			}
+
+			return html;
 		}
 		
-		weeklyHoursDec = (weeklyHoursBox + (weeklyMinutesBox/60)) / 4;
-		
-		weeklyHoursDec = max(weeklyHoursDec, 66);
-		
-		if (document.getElementById('exemption90').checked && weeklyHoursDec < 90) {
-			weeklyHoursDec = 90;
-		} else if(document.getElementById('exemption7075').checked && weeklyHoursDec < 70.75) {
-			weeklyHoursDec = 70.75;
+		function toUTCDateString(d) {
+			months = new Array('January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December');
+			days = new Array('Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat');
+			return days[d.getUTCDay()] + ' ' + months[d.getUTCMonth()] + ' ' + d.getUTCDate() + ', ' + d.getUTCFullYear();
 		}
-		
-		
-		if (document.getElementById('exemptionOther').checked) {
-			otherHoursBox = 0;
-			if (document.getElementById('otherHours').value.trim() != '') {
-				otherHoursBox = parseFloat(document.getElementById('otherHours').value.trim());
+
+		function getWeekHours() {
+			
+			date = new Date(document.getElementById("selYear").value, document.getElementById("selMonth").selectedIndex, 1);
+
+			day = date.getDate();
+			month = date.getMonth();
+			year = date.getFullYear();
+
+			html = '';
+
+			start = 0;
+			end = 0;
+
+			if (document.getElementById("selPP").value == "first") {
+				start = 1;
+				end = 15;
+			} else if (document.getElementById("selPP").value == "second") {
+				start = 16;
+				end = daysInMonth(month, year);
+			} else if (document.getElementById("selPP").value == "fullMonth") {
+				start = 1;
+				end = daysInMonth(month, year);
 			}
 			
-			otherMinutesBox = 0;
-			if (document.getElementById('otherMinutes').value.trim() != '') {
-				otherMinutesBox = parseFloat(document.getElementById('otherMinutes').value.trim());
+			sDate = new Date(Date.UTC(year, month, start));
+			eDate = new Date(Date.UTC(year, month, end));
+			sDate.setTime(sDate.getTime() + sDate.getTimezoneOffset()*60*1000);
+			eDate.setTime(eDate.getTime() + eDate.getTimezoneOffset()*60*1000);
+			
+			if (sDate.getDay() > 0) {
+				html += 'Please enter the number of hours you reported on the following days.<br /><table>';
+				lastPPDays = new Date(sDate.getTime() - (sDate.getDay()) * 86400000);
+
+				while (lastPPDays.getTime() < sDate.getTime()) {
+					html += '<tr><th>' + toUTCDateString(lastPPDays) + '</th><td><input type="text" class="lastMonthHours" size = "5" maxLength="2"> hours <input type="text" class="lastMonthMinutes" size = "5" maxLength="2"> minutes</td><td><b><font color="#FF0000" class="lastMonthError" /></b> </td></tr>';
+
+					lastPPDays.setUTCDate(lastPPDays.getUTCDate() + 1);
+				}
+			}
+
+			return html;
+		}
+
+		function daysInMonth(month, year) {
+			return new Date(year, month + 1, 0).getDate();
+		}
+
+		function makeCalendar(justCal) {
+
+			if (!justCal) {
+				document.getElementById("lastMonthWeeklyDiv").innerHTML = getWeekHours();
 			}
 			
-			otherHoursDec = (otherHoursBox + (otherMinutesBox/60));
+			calendar_html = '';
 			
-			weeklyHoursDec = Math.max(weeklyHoursDec, otherHoursDec);
+			date = new Date(document.getElementById("selYear").value, document.getElementById("selMonth").selectedIndex, 1);
+
+			day = date.getDate();
+			month = date.getMonth();
+			year = date.getFullYear();
+
+			daysThisMonth = daysInMonth(month, year);
+			start = 0;
+			end = 0;
+
+			if (!justCal) {
+				document.getElementById("alreadyWorkedDiv").innerHTML = '';
+			}
+
+			if (document.getElementById("selPP").value == "first") {
+				start = 1;
+				end = 15;
+			} else if (document.getElementById("selPP").value == "second") {
+				start = 16;
+				end = daysThisMonth;
+				if (!justCal) {
+					document.getElementById("alreadyWorkedDiv").innerHTML = 'How many hours have you already reported this month? <input type="text" id="alreadyWorkedHours" size = "5" maxLength="3"> hours <input type="text" id="alreadyWorkedMinutes" size = "5" maxLength="2"> minutes</td><td><b><font color="#FF0000" id="alreadyWorkedError" /></b><br />';
+				}
+			} else if (document.getElementById("selPP").value == "fullMonth") {
+				start = 1;
+				end = daysThisMonth;
+			}
+
+			sDate = new Date(year, month, start);
+			eDate = new Date(year, month, end);
+
+			week = 0;
+
+			months = new Array('January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December');
+			days = new Array('Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday');
+
+			//get day of week of first day of pay period
+			currentDay = new Date(+sDate);
+
+			calendar_html += '<table border = "1">';
+			calendar_html += '<tr height="75px"><td colspan="8" style="text-align: center;"><h3>' + months[month] + ' ' + year + '</h3></td></tr><tr>';
+
+			for (week_day = 0; week_day < days.length; week_day++) {
+				calendar_html += '<th>' + days[week_day] + '</th>';
+			}
+
+			calendar_html += '<th>Weekly Total</th>';
+
+			calendar_html += '<tr>';
+
+			dateRow = true
+				// Fill the first week of the pay period with the appropriate number of blanks.
+			for (week_day = 0; week_day < sDate.getDay(); week_day++) {
+				calendar_html += '<td></td>';
+			}
+			
+			totalDays = 0;
+			currentDay2 = new Date(currentDay.getTime());
+			while (currentDay <= eDate || currentDay2 <= eDate) {
+
+				if (dateRow && currentDay <= eDate) {
+					calendar_html += '<th>' + currentDay.getDate() + '</th>';
+					currentDay.setDate(currentDay.getDate() + 1);
+					
+					if (document.getElementById('day' + currentDay.getUTCDay()).checked || allDays) {
+						totalDays++;
+					}
+					
+				} else {
+					
+					if (week == 0 && currentDay2.getDay() == sDate.getDay()) {
+						for (week_day = 0; week_day < sDate.getDay(); week_day++) {
+							calendar_html += '<td></td>';
+						}
+					}
+					calendar_html += '<td class="week' + week + '" height = "50px"></td>';
+					currentDay2.setDate(currentDay2.getDate() + 1);
+					
+				}
+				
+				if (currentDay > eDate && dateRow) {
+							
+					// Fill the last week of the pay period with the appropriate number of blanks.
+					for (i = eDate.getDay(); i < 6; i++) {
+						calendar_html += '<td ></td>';
+					}
+					calendar_html += '</tr><tr>';	
+					
+					dateRow = !dateRow;				
+				} else if (currentDay.getDay() == 0 && dateRow && currentDay <= eDate) {
+					
+					calendar_html += '</tr><tr>';
+					dateRow = !dateRow;
+				} else if (currentDay2.getDay() == 0 && !dateRow && currentDay2 <= eDate) {
+					calendar_html += '<th class="total">0</th></tr><tr>';
+					dateRow = !dateRow;
+					week++;
+				}
+			
+			}
+
+			// Fill the last week of the month with the appropriate number of result boxes.
+			for (i = eDate.getDay(); i < 6; i++) {
+	
+				calendar_html += '<td ></td>';
+			}
+
+			calendar_html += '<th class="total">0</th></tr><tr>';
+
+			calendar_html += '</tr>';
+			calendar_html += '</table>';
+
+			if (document.getElementById("selPP").value == "first") {
+				while (currentDay.getDate() <= daysThisMonth && currentDay.getUTCMonth() == month) {
+					if (document.getElementById('day' + currentDay.getUTCDay()).checked || allDays) {
+						totalDays++;
+					}
+					currentDay.setDate(currentDay.getDate() + 1);
+				}
+			}
+
+			totalWeeks = week;
+			monthStartDay = sDate.getUTCDay();
+
+			// Display the calendar.
+			document.getElementById("resultCalendar").innerHTML = calendar_html;
 		}
-		
-		weeklyHours = Math.floor(weeklyHoursDec);
-		weeklyMinutes = Math.ceil((weeklyHoursDec - weeklyHours) * 60);		
-		
-		html = weeklyHours + ' hours ' + weeklyMinutes + ' minutes ';
+
+		function validateTopInput() {
+			document.getElementById("monthlyHoursError").innerHTML = ''
+			document.getElementById("exemptionError").innerHTML = ''
+
+			if (isNaN(document.getElementById("monthlyHours").value.trim()) || isNaN(document.getElementById("monthlyMinutes").value.trim())) {
+				document.getElementById("monthlyHoursError").innerHTML = "You have entered something that isn't a number.<br>Please check what you've entered.";
+				return false;
+			}
+
+			if (document.getElementById("exemptionOther").checked && (isNaN(document.getElementById("otherHours").value.trim()) || isNaN(document.getElementById("otherMinutes").value.trim()))) {
+				document.getElementById("exemptionError").innerHTML = "You have entered something that isn't a number.<br>Please check what you've entered.";
+				return false;
+			}
+
+			return true;
+		}
+
+		function validateInput() {
+			if (!validateTopInput()) {
+				return false;
+			}
+
+			if (isNaN(document.getElementById('weeklyHours').innerHTML[0]) || (document.getElementById("monthlyHours").value.trim() == '' && document.getElementById("monthlyMinutes").value.trim() == '' )) {
+				document.getElementById('weeklyHours').innerHTML = '<font color="#ff0000"><b>Not enough information entered above.  Please check that you <br>have entered a number of hours and/or chosen an exemption.</b></font>';
+				return false;
+			}
+			lastMonthHours = document.getElementsByClassName("lastMonthHours");
+			lastMonthMinutes = document.getElementsByClassName("lastMonthMinutes");
+			for (i = 0; i < lastMonthHours.length; i++) {
+				if (isNaN(lastMonthHours[i].value.trim()) || isNaN(lastMonthMinutes[i].value.trim())) {
+					document.getElementsByClassName("lastMonthError")[i].innerHTML = "You have entered something that isn't a number.<br>Please check what you've entered.";
+					return false;
+				} else {
+					document.getElementsByClassName("lastMonthError")[i].innerHTML = '';
+				}
+
+			}
 			
-	}
-	
-	document.getElementById('weeklyHours').innerHTML = html;
-}
+			if (document.getElementById('alreadyWorkedDiv').innerHTML != '') {
+				document.getElementById("alreadyWorkedError").innerHTML = ''
 
-function doGenerate() {
-	
-	if (validateInput()) {
-		
-	}
-}
+				if (isNaN(document.getElementById("alreadyWorkedHours").value.trim()) || isNaN(document.getElementById("alreadyWorkedMinutes").value.trim())) {
+						document.getElementById("alreadyWorkedError").innerHTML = "You have entered something that isn't a number.<br>Please check what you've entered.";
+						return false;
+				}
+			}
 
-//calendar();
+			return true;
+		}
+
+		function calcWeekly() {
+
+			html = 'Invalid Input';
+
+			if (validateTopInput()) {
+
+				monthlyHoursBox = 0;
+				if (document.getElementById('monthlyHours').value.trim() != '') {
+					monthlyHoursBox = parseFloat(document.getElementById('monthlyHours').value.trim());
+				}
+
+				monthlyMinutesBox = 0;
+				if (document.getElementById('monthlyMinutes').value.trim() != '') {
+					monthlyMinutesBox = parseFloat(document.getElementById('monthlyMinutes').value.trim());
+				}
+
+				monthlyHoursDec = monthlyHoursBox + (monthlyMinutesBox / 60);
+				weeklyHoursDec = monthlyHoursDec / 4;
+
+				weeklyHoursDec = Math.min(weeklyHoursDec, 66);
+				//weeklyHoursDec = Math.max(weeklyHoursDec, 66);
+
+				if (document.getElementById('exemption90').checked && weeklyHoursDec < 90) {
+					weeklyHoursDec = 90;
+				} else if (document.getElementById('exemption7075').checked && weeklyHoursDec < 70.75) {
+					weeklyHoursDec = 70.75;
+				}
 
 
-</script>
+				if (document.getElementById('exemptionOther').checked) {
+					otherHoursBox = 0;
+					if (document.getElementById('otherHours').value.trim() != '') {
+						otherHoursBox = parseFloat(document.getElementById('otherHours').value.trim());
+					}
+
+					otherMinutesBox = 0;
+					if (document.getElementById('otherMinutes').value.trim() != '') {
+						otherMinutesBox = parseFloat(document.getElementById('otherMinutes').value.trim());
+					}
+
+					otherHoursDec = (otherHoursBox + (otherMinutesBox / 60));
+
+					weeklyHoursDec = Math.max(weeklyHoursDec, otherHoursDec);
+				}
+
+				html = printHoursMinutes(weeklyHoursDec, false);
+
+			}
+
+			document.getElementById('weeklyHours').innerHTML = html;
+		}
+
+		function doGenerate() {
+
+			if (validateInput()) {
+				
+				makeCalendar(true);
+				
+				monthlyHoursLeft = monthlyHoursDec;
+				monthlyTotal = 0;
+				monthAvg = 0;
+				totalDaysLeft = totalDays;
+
+				weekTotals = document.getElementsByClassName("total");
+				OTHours = 0;
+				
+				awH = 0;
+				awM = 0;
+				if (document.getElementById('alreadyWorkedDiv').innerHTML != '') {
+					if (document.getElementById("alreadyWorkedHours").value.trim() != '') {
+						awH = parseFloat(document.getElementById("alreadyWorkedHours").value.trim())
+					}
+					
+					if (document.getElementById("alreadyWorkedMinutes").value.trim() != '') {
+						awM = parseFloat(document.getElementById("alreadyWorkedMinutes").value.trim())
+					}
+					monthlyHoursLeft -= awH + awM / 60;
+				}
+				
+				for (week = 0; week <= totalWeeks; week++) {
+					//reset weekly hour
+					weeklyHoursLeft = weeklyHoursDec;
+					weekHours = 0;
+					
+					
+					if (week == 0) {
+						lastMonthHours = document.getElementsByClassName("lastMonthHours");
+						lastMonthMinutes = document.getElementsByClassName("lastMonthMinutes");
+						for (m = 0; m < lastMonthHours.length; m++) {
+							weekMins = 0;
+							if (lastMonthMinutes[m].value.trim() != '') {
+								weekMins = parseFloat(lastMonthMinutes[m].value.trim());
+							}
+							
+							weekHrs = 0;
+							if (lastMonthHours[m].value.trim() != '') {
+								weekHrs = parseFloat(lastMonthHours[m].value.trim());
+							}
+							weekHours += weekHrs + weekMins / 60;
+
+						}
+						weeklyHoursLeft -= weekHours;				
+						monthlyHoursLeft -= weekHours;	
+						
+						monthAvg = monthlyHoursLeft / totalDays;						
+						
+					}
+
+					
+					thisWeekDays = document.getElementsByClassName("week" + week);
+					
+					dayIndex = 0;
+						
+					if (week == 0) {
+						dayIndex = monthStartDay;
+					}
+					
+					daysChecked = 0;
+					for (k = dayIndex; k < thisWeekDays.length + dayIndex; k++) {
+						if (document.getElementById('day' + k).checked) {
+							daysChecked++;
+						}
+					}
+					
+					avgDailyHours = Math.min(12, weeklyHoursLeft / daysChecked, monthAvg);
+
+					for (j = dayIndex; j < thisWeekDays.length + dayIndex; j++) {
+						hoursBilledToday = 0;				
+						if (document.getElementById('day' + j).checked || allDays) {
+							if (Math.floor(avgDailyHours) >= Math.round(monthlyHoursLeft / totalDaysLeft)) {
+								hoursToday = Math.floor(avgDailyHours);
+							} else {
+								hoursToday = Math.ceil(avgDailyHours);
+							}
+							
+							if (j == thisWeekDays.length - 1 && week == totalWeeks) {
+								hoursToday = Math.min(weeklyHoursLeft, monthlyHoursLeft);
+							}
+							
+							hoursBilledToday = Math.min(hoursToday, weeklyHoursLeft, monthlyHoursLeft, 12);
+							
+							weeklyHoursLeft -= hoursBilledToday;
+							monthlyHoursLeft -= hoursBilledToday;
+							weekHours += hoursBilledToday;
+							monthlyTotal += hoursBilledToday;
+						}
+						
+						if (hoursBilledToday >= 1/60) {
+							thisWeekDays[j-dayIndex].innerHTML = printHoursMinutes(hoursBilledToday, true);
+						}
+						
+						totalDaysLeft--;
+					}
+					OTHours += Math.max(0, weekHours - 40);
+					weekTotals[week].innerHTML = printHoursMinutes(weekHours, true);
+					
+				}
+				document.getElementById("monthlyTotalDiv").innerHTML = "Total Hours This Pay Period: " + printHoursMinutes(monthlyTotal, true) + "<br>Overtime Hours: " + printHoursMinutes(OTHours, true);
+			}
+		}
+
+
+	</script>
 </head>
 
 <body>
 
 
-<h3>Overtime Hours Calendar Generator</h3>
+	<h3>Overtime Hours Calendar Generator</h3>
 
-<p>text goes here</p>
+	<p>text goes here</p>
 
 
-<table border="1" borderstyle="flat">
-<tr><td><b>Enter your monthly hours: </b></td>
-<td><input type="text" id="monthlyHours" size = "5" maxLength="3" onkeyup="calcWeekly()"/> hours <input type="text" id="monthlyMinutes" size = "5" maxLength="2" onkeyup="calcWeekly()"/> minutes
-<td><b><font color="#FF0000" id="monthlyHoursError" /></b></td></tr>
+	<table border="1" borderstyle="flat">
+		<tr>
+			<td><b>Enter your monthly hours: </b></td>
+			<td><input type="text" id="monthlyHours" size="5" maxLength="3" onkeyup="calcWeekly()" /> hours <input type="text" id="monthlyMinutes" size="5" maxLength="2" onkeyup="calcWeekly()" /> minutes
+				<td><b><font color="#FF0000" id="monthlyHoursError" /></b></td>
+		</tr>
 
-<tr><td><b>Do you qualify for an exemption?</b></td>
-<td><input type="checkbox" id="exemption90"  onchange="calcWeekly()"/>90 hours per week family exemption<br /> <input type="checkbox" id="exemption7075"  onchange="calcWeekly()"/>One Provider for One Client<br /> <input type="checkbox" id="exemptionOther"  onchange="calcWeekly()"/> Other Exemption <input type="text" id="otherHours" size = "5" maxLength="3" onkeyup="calcWeekly()"/> hours <input type="text" id="otherMinutes" size = "5" maxLength="2" onkeyup="calcWeekly()"/> minutes per week</td><td><b><font color="#FF0000" id="exemptionError" /></b> </td></tr>
+		<tr>
+			<td><b>Do you qualify for an exemption?</b></td>
+			<td><input type="checkbox" id="exemption90" onchange="calcWeekly()" />90 hours per week family exemption<br /> <input type="checkbox" id="exemption7075" onchange="calcWeekly()" />One Provider for One Client<br /> <input type="checkbox" id="exemptionOther" onchange="calcWeekly()" /> Other Exemption <input type="text" id="otherHours" size="5" maxLength="3" onkeyup="calcWeekly()" /> hours <input type="text" id="otherMinutes" size="5" maxLength="2" onkeyup="calcWeekly()" /> minutes per week</td>
+			<td><b><font color="#FF0000" id="exemptionError" /></b> </td>
+		</tr>
 
-<tr><td><b>Maximum Weekly Hours</b></td><td colspan="2" id="weeklyHours">Enter Numbers Above</td></tr>
+		<tr>
+			<td><b>Maximum Weekly Hours</b></td>
+			<td colspan="2" id="weeklyHours">Enter Numbers Above</td>
+		</tr>
 
-</table>
+	</table>
 
-<div id="selDaysDiv"></div>
-<div id="selMonthDiv"></div>
+	<div id="selDaysDiv"></div>
+	<div id="selMonthDiv"></div>
 
-<div id="lastMonthWeeklyDiv"></div>
-<p id="resultCalendar"></p>
+	<div id="lastMonthWeeklyDiv"></div>
+	<div id="alreadyWorkedDiv"></div>
+	<p id="resultCalendar"></p>
 
-<script>
-document.getElementById("selDaysDiv").innerHTML = chooseDays();
-document.getElementById("selMonthDiv").innerHTML = chooseMonth();
+	<script>
+		document.getElementById("selDaysDiv").innerHTML = chooseDays();
+		document.getElementById("selMonthDiv").innerHTML = choosePayPeriod();
 
-document.getElementById("selYear").selectedIndex =5;
-document.getElementById("selMonth").selectedIndex = new Date().getMonth();
-document.getElementById("lastMonthWeeklyDiv").innerHTML = getWeekHours();
-makeCalendar();
-</script>
+		document.getElementById("selYear").selectedIndex = 5;
+		document.getElementById("selMonth").selectedIndex = new Date().getMonth();
+		document.getElementById("lastMonthWeeklyDiv").innerHTML = getWeekHours();
+		makeCalendar();
+	</script>
 
-<button type="button" onClick="doGenerate()">Create My Timesheet</button>
-
+	<button type="button" onClick="doGenerate()">Create My Timesheet</button>
+	<div><h3 id = "monthlyTotalDiv"/></div>
+	
 </body>
+
 </html>
