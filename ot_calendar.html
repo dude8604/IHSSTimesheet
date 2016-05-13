@@ -6,18 +6,18 @@
 		"use strict";
 		var totalDays = 0;
 		var totalWeeks = 0;
-		var weeklyHoursDec = 0;
-		var monthlyHoursDec = 0;
+		var weeklyMinutes = 0;
+		var monthlyMinutes = 0;
 		var monthStartDay = 0;
 		var daysThisMonth = 0;
 		var firstPP = false;
 		var allDays = true;
 
-		function printHoursMinutes(hoursDec, shortForm) {
+		function printHoursMinutes(minutes, shortForm) {
 
-			var hours = Math.floor(hoursDec);
+			var hours = Math.floor(minutes / 60);
 
-			var minutes = Math.floor((hoursDec - hours) * 60);
+			var minutes = Math.floor(minutes - (hours * 60));
 			if (minutes >= 60) {
 				hours++;
 				minutes -= 60;
@@ -96,6 +96,8 @@
 			for (var i = 0; i < days.length; i++) {
 				html += '<td><input type = "checkBox" id = "day' + i + '" onchange="checkIfAllDays()" /></td>';
 			}
+			html += '</table>';
+			html += '<br /><input type="checkbox" id="wholeNums" checked="true" /> Use whole hours where possible.';
 
 			return html;
 		}
@@ -229,7 +231,7 @@
 					calendar_html += '<th>' + currentDay.getDate() + '</th>';
 					currentDay.setDate(currentDay.getDate() + 1);
 
-					if (document.getElementById('day' + currentDay.getUTCDay()).checked || allDays) {
+					if (currentDay <= eDate && document.getElementById('day' + currentDay.getUTCDay()).checked || allDays) {
 						totalDays++;
 					}
 
@@ -352,16 +354,16 @@
 					monthlyMinutesBox = parseFloat(document.getElementById('monthlyMinutes').value.trim());
 				}
 
-				monthlyHoursDec = monthlyHoursBox + (monthlyMinutesBox / 60);
-				weeklyHoursDec = monthlyHoursDec / 4;
+				monthlyMinutes = monthlyHoursBox*60 + monthlyMinutesBox;
+				weeklyMinutes = Math.ceil(monthlyMinutes / 4);
 
-				weeklyHoursDec = Math.min(weeklyHoursDec, 66);
+				weeklyMinutes = Math.min(weeklyMinutes, 66*60);
 				//weeklyHoursDec = Math.max(weeklyHoursDec, 66);
 
-				if (document.getElementById('exemption90').checked && weeklyHoursDec < 90) {
-					weeklyHoursDec = 90;
-				} else if (document.getElementById('exemption7075').checked && weeklyHoursDec < 70.75) {
-					weeklyHoursDec = 70.75;
+				if (document.getElementById('exemption90').checked && weeklyMinutes < 90*60) {
+					weeklyMinutes = 90*60;
+				} else if (document.getElementById('exemption7075').checked && weeklyMinutes < 70.75*60) {
+					weeklyMinutes = 70.75*60;
 				}
 
 
@@ -371,17 +373,17 @@
 						otherHoursBox = parseFloat(document.getElementById('otherHours').value.trim());
 					}
 
-					otherMinutesBox = 0;
+					var otherMinutesBox = 0;
 					if (document.getElementById('otherMinutes').value.trim() != '') {
 						otherMinutesBox = parseFloat(document.getElementById('otherMinutes').value.trim());
 					}
 
-					otherHoursDec = (otherHoursBox + (otherMinutesBox / 60));
+					var otherMinutes = otherHoursBox*60 + otherMinutesBox;
 
-					weeklyHoursDec = parseFloat(Math.max(weeklyHoursDec, otherHoursDec).toPrecision(5));
+					weeklyMinutes = Math.max(weeklyMinutes, otherMinutes);
 				}
 
-				html = printHoursMinutes(weeklyHoursDec, false);
+				html = printHoursMinutes(weeklyMinutes, false);
 
 			}
 
@@ -396,13 +398,13 @@
 
 				makeCalendar(true);
 
-				var monthlyHoursLeft = monthlyHoursDec;
+				var monthlyMinutesLeft = monthlyMinutes;
 				var monthlyTotal = 0;
 				var monthAvg = 0;
 				var totalDaysLeft = totalDays;
 
 				var weekTotals = document.getElementsByClassName("total");
-				var OTHours = 0;
+				var OTMinutes = 0;
 
 				var timesheet = new Array();
 				for (var i = 0; i < weekTotals.length; i++) {
@@ -420,13 +422,13 @@
 					if (document.getElementById("alreadyWorkedMinutes").value.trim() != '') {
 						awM = parseFloat(document.getElementById("alreadyWorkedMinutes").value.trim())
 					}
-					monthlyHoursLeft -= awH + awM / 60;
+					monthlyMinutesLeft -= awH*60 + awM;
 				}
 
 				for (var week = 0; week <= totalWeeks; week++) {
 					//reset weekly hour
-					var weeklyHoursLeft = weeklyHoursDec;
-					var weekHours = 0;
+					var weeklyMinutesLeft = weeklyMinutes;
+					var weekMinutes = 0;
 
 
 					if (week == 0) {
@@ -442,19 +444,23 @@
 							if (lastMonthHours[m].value.trim() != '') {
 								weekHrs = parseFloat(lastMonthHours[m].value.trim());
 							}
-							weekHours += weekHrs + weekMins / 60;
+							weekMinutes += weekHrs*60 + weekMins;
 
 						}
 
 						if (firstPP) {
-							monthlyHoursLeft = Math.ceil(monthlyHoursLeft * 0.6);
+							monthlyMinutesLeft = Math.ceil(monthlyMinutesLeft * 0.6);
 
 						}
-						weeklyHoursLeft -= weekHours;
-						timesheet[week].push(weekHours);
+						weeklyMinutesLeft -= weekMinutes;
+						timesheet[week].push(weekMinutes);
 						//						monthlyHoursLeft -= weekHours;	
 
-						monthAvg = monthlyHoursLeft / totalDays;
+						monthAvg = Math.floor(monthlyMinutesLeft / totalDays);
+						
+						if (monthAvg == 0) {
+							monthAvg = 1;
+						}
 
 					}
 
@@ -468,71 +474,69 @@
 					}
 
 					var daysChecked = 0;
+					var lastDayCheckedIndex = 0;
 					for (var k = dayIndex; k < thisWeekDays.length + dayIndex; k++) {
 						if (document.getElementById('day' + k).checked || allDays) {
 							daysChecked++;
+							lastDayCheckedIndex = k;
 						}
 					}
 
 					var weekDaysLeft = thisWeekDays.length;
 
 					for (var j = dayIndex; j < thisWeekDays.length + dayIndex; j++) {
-						var hoursBilledToday = 0;
+						var minutesBilledToday = 0;
 
 						if (document.getElementById('day' + j).checked || allDays) {
-							var hoursToday = monthAvg;
+							var minutesToday = monthAvg;
+							var wholeNums = document.getElementById('wholeNums');
+							if (minutesToday > 60 && wholeNums.checked) {
+								minutesToday = Math.floor(monthAvg/60)*60;
+							}
+							
 
-							if (hoursToday > 1) {
-								hoursToday = Math.floor(monthAvg);
+							minutesBilledToday = Math.min(minutesToday, weeklyMinutesLeft, monthlyMinutesLeft, 12*60);
+							
+							if (j == thisWeekDays.length + dayIndex - 1 || dayIndex - 1 == lastDayCheckedIndex) {
+								minutesBilledToday = Math.min(minutesToday, monthlyMinutesLeft, weeklyMinutesLeft);
 							}
 
-							hoursBilledToday = Math.min(hoursToday, weeklyHoursLeft, monthlyHoursLeft, 12);
-							
-							if (j == thisWeekDays.length + dayIndex - 1) {
-								hoursBilledToday += 1/61;
-							}
+							minutesBilledToday = Math.max(0, minutesBilledToday);
 
-							//hoursBilledToday = Math.floor(hoursBilledToday * 10000) / 10000;
-
-							weeklyHoursLeft -= hoursBilledToday;
-							monthlyHoursLeft -= hoursBilledToday;
-							weekHours += hoursBilledToday;
-							monthlyTotal += hoursBilledToday;
-							
-							//weeklyHoursLeft = Math.floor(weeklyHoursLeft * 10000) / 10000;
-							//monthlyHoursLeft = Math.floor(monthlyHoursLeft * 10000) / 10000;
-							//weekHours = Math.floor(weekHours * 10000) / 10000;
-							//monthlyTotal = Math.floor(monthlyTotal * 10000) / 10000;
+						if (minutesBilledToday >= 1) {
+							timesheet[week].push(minutesBilledToday);
+							weeklyMinutesLeft -= minutesBilledToday;
+							monthlyMinutesLeft -= minutesBilledToday;
+							weekMinutes += minutesBilledToday;
+							monthlyTotal += minutesBilledToday;
 																																			
 							
 							weekDaysLeft--;
 							totalDaysLeft--;
+							}
 						}
-
-						if (hoursBilledToday >= 1 / 60) {
-							//thisWeekDays[j-dayIndex].innerHTML = printHoursMinutes(hoursBilledToday, true);
-							timesheet[week].push(hoursBilledToday);
-						}
-
 
 					}
-					OTHours += Math.max(0, weekHours - 40);
-					weeklyTotals.push(weekHours);
+					OTMinutes += Math.max(0, weekMinutes - 40*60);
+					weeklyTotals.push(weekMinutes);
 					//weekTotals[week].innerHTML = printHoursMinutes(weekHours, true);
 
 				}
 
-				var minHour = 1;
-				for (var n = 0; n < 84; n++) {
-					if (monthlyHoursLeft > 0) {
+				var minMinute = 60;
+				for (var n = 0; n < 150; n++) {
+					if (monthlyMinutesLeft > 0) {
 						var counter = 0;			
-						var skip = Math.max(Math.floor(totalDays / monthlyHoursLeft) + 1 - n, 1);
+						var skip = Math.max(Math.floor(totalDays / monthlyMinutesLeft) + 1 - n, 1);
 						if (skip > 10) {
 							skip = 1;
 						}
 
 						if (n > 70 && (n % 5 == 0)) {
-							minHour *= 0.5;
+							minMinute *= 0.5;
+							if (minMinute < 1) {
+								minMinute = 1;
+							}
 						}	
 						
 						for (var i = 0; i < timesheet.length; i++) {
@@ -543,25 +547,21 @@
 							}
 								
 							for (var k = kstart; k < timesheet[i].length; k++) {
-								if (monthlyHoursLeft > 0 && counter > 0 && counter % skip == 0 &&
-									weeklyHoursDec - weeklyTotals[i] >= minHour) {
+								if (monthlyMinutesLeft > 0 && counter > 0 && counter % skip == 0 &&
+									weeklyMinutes - weeklyTotals[i] >= minMinute) {
 
-									var hours = Math.min(1, monthlyHoursLeft, 12 - timesheet[i][k], weeklyHoursDec - weeklyTotals[i]);
+									var minutes = Math.min(minMinute, monthlyMinutesLeft, 12*60 - timesheet[i][k], weeklyMinutes - weeklyTotals[i]);
 									
-									hours = Math.floor(hours * 10000) / 10000;
+									//hours = Math.floor(hours * 10000) / 10000;
 									
-									timesheet[i][k] += hours;
-									weeklyTotals[i] += hours;
-									monthlyHoursLeft -= hours;
-									monthlyTotal += hours;
+									timesheet[i][k] += minutes;
+									weeklyTotals[i] += minutes;
+									monthlyMinutesLeft -= minutes;
+									monthlyTotal += minutes;
 									
-									timesheet[i][k] = Math.floor(timesheet[i][k] * 10000) / 10000;
-									weeklyTotals[i] = Math.floor(weeklyTotals[i] * 10000) / 10000;
-									monthlyHoursLeft = Math.floor(monthlyHoursLeft * 10000) / 10000;
-									monthlyTotal = Math.floor(monthlyTotal * 10000) / 10000;
 									
-									if (weeklyHours[i] > 40) {
-										OTHours += Math.min(hours, weeklyTotals[i] - 40);
+									if (weeklyTotals[i] > 40*60) {
+										OTMinutes += Math.min(minutes, weeklyTotals[i] - 40*60);
 									}
 								}
 								counter++;
@@ -600,8 +600,8 @@
 					weekTotals[i].innerHTML = printHoursMinutes(weeklyTotals[i], true);
 				}
 
-				document.getElementById("monthlyTotalDiv").innerHTML = "Total Hours This Pay Period: " + printHoursMinutes(monthlyTotal, true) + "<br>Overtime Hours: " + printHoursMinutes(OTHours, true);
-				if (!firstPP && !allDays && monthlyHoursLeft > 0) {
+				document.getElementById("monthlyTotalDiv").innerHTML = "Total Hours This Pay Period: " + printHoursMinutes(monthlyTotal, true) + "<br>Overtime Hours: " + printHoursMinutes(OTMinutes, true);
+				if (!firstPP && !allDays && monthlyMinutesLeft > 0) {
 					document.getElementById("monthlyTotalDiv").innerHTML += "<br /><font color = \"red\"><b>Couldn't bill all your hours.  You might have not selected enough days.</b></font>";
 				}
 
