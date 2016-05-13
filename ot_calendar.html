@@ -8,6 +8,7 @@
 		monthlyHoursDec = 0;
 		monthStartDay = 0;
 		daysThisMonth = 0;
+   firstPP = false;
 		allDays = true;
 		
 		function printHoursMinutes(hoursDec, shortForm) {
@@ -16,6 +17,11 @@
 		
 			
 			minutes = Math.ceil((hoursDec - hours) * 60);
+			if (minutes > 60) {
+				hours++;
+				minutes -= 60;
+			}
+			
 			minutesStr = minutes.toString();
 			if (minutes < 10) {
 				minutesStr = '0' + minutesStr;
@@ -144,6 +150,7 @@
 				document.getElementById("lastMonthWeeklyDiv").innerHTML = getWeekHours();
 			}
 			
+			document.getElementById('monthlyTotalDiv').innerHTML = '';
 			calendar_html = '';
 			
 			date = new Date(document.getElementById("selYear").value, document.getElementById("selMonth").selectedIndex, 1);
@@ -155,6 +162,7 @@
 			daysThisMonth = daysInMonth(month, year);
 			start = 0;
 			end = 0;
+     firstPP = false;
 
 			if (!justCal) {
 				document.getElementById("alreadyWorkedDiv").innerHTML = '';
@@ -163,6 +171,7 @@
 			if (document.getElementById("selPP").value == "first") {
 				start = 1;
 				end = 15;
+     firstPP = true;
 			} else if (document.getElementById("selPP").value == "second") {
 				start = 16;
 				end = daysThisMonth;
@@ -366,7 +375,7 @@
 
 					otherHoursDec = (otherHoursBox + (otherMinutesBox / 60));
 
-					weeklyHoursDec = Math.max(weeklyHoursDec, otherHoursDec);
+					weeklyHoursDec = parseFloat(Math.max(weeklyHoursDec, otherHoursDec).toPrecision(5));
 				}
 
 				html = printHoursMinutes(weeklyHoursDec, false);
@@ -377,6 +386,9 @@
 		}
 
 		function doGenerate() {
+
+			document.getElementById("monthlyTotalDiv").innerHTML = '';
+			roundDown = false;
 
 			if (validateInput()) {
 				
@@ -402,6 +414,8 @@
 					}
 					monthlyHoursLeft -= awH + awM / 60;
 				}
+
+				spaceLeft = weeklyHoursDec * (weekTotals.length - 2) + Math.min(document.getElementsByClassName("week" + totalWeeks).length * 12, weeklyHoursDec) + Math.min(document.getElementsByClassName("week" + 0).length * 12, weeklyHoursDec);
 				
 				for (week = 0; week <= totalWeeks; week++) {
 					//reset weekly hour
@@ -426,7 +440,7 @@
 
 						}
 						weeklyHoursLeft -= weekHours;				
-						monthlyHoursLeft -= weekHours;	
+//						monthlyHoursLeft -= weekHours;	
 						
 						monthAvg = monthlyHoursLeft / totalDays;						
 						
@@ -443,39 +457,66 @@
 					
 					daysChecked = 0;
 					for (k = dayIndex; k < thisWeekDays.length + dayIndex; k++) {
-						if (document.getElementById('day' + k).checked) {
+						if (document.getElementById('day' + k).checked || allDays) {
 							daysChecked++;
 						}
 					}
 					
-					avgDailyHours = Math.min(12, weeklyHoursLeft / daysChecked, monthAvg);
-
+					avgDailyHours = Math.min(12, weeklyHoursLeft / daysChecked, monthlyHoursLeft / daysChecked);
+					avgDailyHours = Math.max(avgDailyHours, monthAvg);
+					weekDaysLeft = thisWeekDays.length;
+						
 					for (j = dayIndex; j < thisWeekDays.length + dayIndex; j++) {
 						hoursBilledToday = 0;				
+
 						if (document.getElementById('day' + j).checked || allDays) {
-							if (Math.floor(avgDailyHours) >= Math.round(monthlyHoursLeft / totalDaysLeft)) {
-								hoursToday = Math.floor(avgDailyHours);
+							if (totalDays > totalDaysLeft && monthAvg < monthlyTotal / (totalDays - totalDaysLeft)) {
+								hoursToday = Math.floor(monthAvg);
 							} else {
-								hoursToday = Math.ceil(avgDailyHours);
+								hoursToday = Math.ceil(monthAvg);
 							}
 							
-							if (j == thisWeekDays.length - 1 && week == totalWeeks) {
+							if (week == 0) {
+								hoursToday += Math.floor((spaceLeft - monthlyHoursDec) / thisWeekDays.length) * 2;
+								if (j % 2) {
+									hoursToday++;
+								}
+							}
+							
+//							if (roundDown) {
+//								hoursToday = Math.floor(avgDailyHours);
+//							} else {
+//								hoursToday = Math.ceil(avgDailyHours);
+//							}
+							//if (avgDailyHours > monthlyHoursLeft / totalDaysLeft) {
+								//hoursToday = Math.floor(avgDailyHours);
+							//} else {
+								//hoursToday = Math.round(avgDailyHours);
+							//}
+							
+							if (j == thisWeekDays.length - 1 && week == totalWeeks && !firstPP) {
 								hoursToday = Math.min(weeklyHoursLeft, monthlyHoursLeft);
 							}
 							
 							hoursBilledToday = Math.min(hoursToday, weeklyHoursLeft, monthlyHoursLeft, 12);
 							
+							hoursBilledToday = Math.floor(hoursBilledToday * 1000) / 1000;
+							
 							weeklyHoursLeft -= hoursBilledToday;
 							monthlyHoursLeft -= hoursBilledToday;
 							weekHours += hoursBilledToday;
 							monthlyTotal += hoursBilledToday;
+
+							weekDaysLeft--;
+							totalDaysLeft--;
+							roundDown = !roundDown;
 						}
 						
 						if (hoursBilledToday >= 1/60) {
 							thisWeekDays[j-dayIndex].innerHTML = printHoursMinutes(hoursBilledToday, true);
 						}
 						
-						totalDaysLeft--;
+					
 					}
 					OTHours += Math.max(0, weekHours - 40);
 					weekTotals[week].innerHTML = printHoursMinutes(weekHours, true);
@@ -494,7 +535,22 @@
 
 	<h3>Overtime Hours Calendar Generator</h3>
 
-	<p>text goes here</p>
+	<p>I made this to help people with their IHSS timesheets given all the confusion with the new overtime rules.  This is not official and I can't take responsibility for any problems you have from relying on this - it's just a tool to help.  I tested it and it works fine as far as I can tell.  Please let me know if you have any problems or see any mistakes using it and I'll fix them.</p>
+	<p><b>Disclaimer: You are only allowed to bill the actual hours you've worked on each day.  This tool should only be used if you work more hours than IHSS gives you, or as a scheduling tool.  I don't take responsibility for any use of this that would violate IHSS rules or any laws.</b></p>
+	<p>With that out of the way, here's who should use this.:
+	<li>0. Calculating weekly maximum hours should be correct for every case.</li>
+	<li>1. First, right now <b>creating timesheets only works correctly for one provider working for one recipient</b>.</li>
+	<li>2. For one provider with multiple recipients it will get you close, if you enter the monthly hours your recipient has assigned you and the weekly hours as an "Other Exemption"" if the calculated maximum weekly hours are too low.  Do this for each recipient, but be sure you <b>never go over 12 hours a days total</b>.  But if you use it for this, please double check the results.</li>
+	<li>3. For a provider who works for a recipient with multiple providers, read #2.</li>
+	<li>4. If you work for multiple recipients and at least one of them has multiple providers, this tool won't work because it would have to coordinate too many people.  It's definitely something that someone could make, but I don't have time to take on a big project like that, and I'm not sure IHSS would be okay with that.</p>
+	<p><b>Instructions:</b>
+	<li>1. Read everything above.</li>
+	<li>2. Enter your (or your recipient's) monthly authorized hours and check any exemptions you have been approved for.</li>
+	<li>3. Choose a month and year and the pay period you are on (or the full month).</li>
+	<li>4. Enter any information it asks for about the previous pay period.  <b>Make sure what you enter is complete and accurate.</b></li>
+	<li>5. Click "Create My Timesheet" at the bottom.  If you want to do more than one month or pay period, make sure you write down or print the hours and total for the last week.</li>
+	<li>6. <a href = "mailto:dude8604+ihsstimesheet@gmail.com">Email me</a> or contact me through the Facebook group if you have problems, questions, comments about this, or if you get a violation from using the results of this.</li></p>
+	<p>If there's anything I should add to this, please let me know.</p>
 
 
 	<table border="1" borderstyle="flat">
@@ -522,8 +578,14 @@
 
 	<div id="lastMonthWeeklyDiv"></div>
 	<div id="alreadyWorkedDiv"></div>
+<br />
 	<p id="resultCalendar"></p>
+	
+<br />
+	<div><h3 id = "monthlyTotalDiv"/></div>
+	<button type="button" onClick="doGenerate()">Create My Timesheet</button>
 
+	
 	<script>
 		document.getElementById("selDaysDiv").innerHTML = chooseDays();
 		document.getElementById("selMonthDiv").innerHTML = choosePayPeriod();
@@ -534,8 +596,6 @@
 		makeCalendar();
 	</script>
 
-	<button type="button" onClick="doGenerate()">Create My Timesheet</button>
-	<div><h3 id = "monthlyTotalDiv"/></div>
 	
 </body>
 
