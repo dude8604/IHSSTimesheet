@@ -97,7 +97,8 @@
 				html += '<td><input type = "checkBox" id = "day' + i + '" onchange="checkIfAllDays()" /></td>';
 			}
 			html += '</table>';
-			html += '<br /><input type="checkbox" id="wholeNums" checked="true" /> Use whole hours where possible.';
+			html += '<br /><input type="checkbox" id="wholeNums" checked="true" /> Use whole hours where possible.<br />';
+			html += '<br /><input type="checkbox" id="equalHours" checked="true" /> Split hours equally between both pay periods (may not split overtime hours evenly).';
 
 			return html;
 		}
@@ -402,6 +403,7 @@
 				var monthlyTotal = 0;
 				var monthAvg = 0;
 				var totalDaysLeft = totalDays;
+				var dateInMonth=1;
 
 				var weekTotals = document.getElementsByClassName("total");
 				var OTMinutes = 0;
@@ -424,6 +426,9 @@
 					}
 					monthlyMinutesLeft -= awH*60 + awM;
 				}
+				
+				var equalPP = document.getElementById('equalHours').checked;
+				var ppMinutesLeft = monthlyMinutesLeft/2;
 
 				for (var week = 0; week <= totalWeeks; week++) {
 					//reset weekly hour
@@ -499,8 +504,12 @@
 							}
 						}
 							
-
+							
 							minutesBilledToday = Math.min(minutesToday, weeklyMinutesLeft, monthlyMinutesLeft, 12*60);
+							
+							if (equalPP && dateInMonth <= 15) {
+								minutesBilledToday = Math.min(minutesBilledToday, ppMinutesLeft);
+							}
 							
 							if (j == thisWeekDays.length + dayIndex - 1 || dayIndex - 1 == lastDayCheckedIndex) {
 								minutesBilledToday = Math.min(minutesToday, monthlyMinutesLeft, weeklyMinutesLeft);
@@ -512,15 +521,17 @@
 							timesheet[week].push(minutesBilledToday);
 							weeklyMinutesLeft -= minutesBilledToday;
 							monthlyMinutesLeft -= minutesBilledToday;
+							ppMinutesLeft -= minutesBilledToday;							
 							weekMinutes += minutesBilledToday;
 							monthlyTotal += minutesBilledToday;
+
 																																			
 							
 							weekDaysLeft--;
 							totalDaysLeft--;
 							}
 						}
-
+						dateInMonth++;
 					}
 					OTMinutes += Math.max(0, weekMinutes - 40*60);
 					weeklyTotals.push(weekMinutes);
